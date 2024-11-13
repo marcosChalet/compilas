@@ -1,0 +1,60 @@
+program -> decls stmts
+
+decls -> decl decls | ϵ
+
+decl -> type id { symtable.insert(id, type) } 
+      | matrix_decl
+
+type -> "int" | "float" | "bool"
+
+matrix_decl -> "matrix" id "[" integer ":" integer "]" "=" matrix_init { symtable.insert(id, "matrix") }
+
+matrix_init -> "{" matrix_rows "}"
+matrix_rows -> "{" values "}" | "{" values "}" "," matrix_rows
+values -> integer | integer "," values
+
+stmts -> stmt stmts | ϵ
+
+stmt -> if_stmt 
+      | for_stmt 
+      | while_stmt 
+      | do_while_stmt
+      | func_decl
+      | expr
+
+if_stmt -> "if" "(" expr ")" block else_block
+else_block -> "else" block | ϵ
+
+for_stmt -> "for" "(" type id "=" expr ";" expr ";" expr ")" block
+
+while_stmt -> "while" "(" expr ")" block
+
+do_while_stmt -> "do" block "while" "(" expr ")" ";"
+
+func_decl -> "func" id "(" params ")" block
+
+params -> param "," params | param | ϵ
+param -> type id
+
+block -> "{" stmts "}"
+
+expr -> id "=" expr | bool_expr | arithmetic_expr | id "(" args ")"
+
+bool_expr -> expr "==" expr 
+           | expr "!=" expr 
+           | expr "<" expr 
+           | expr ">" expr 
+           | expr "<=" expr 
+           | expr ">=" expr
+
+arithmetic_expr -> expr "+" term 
+                 | expr "-" term 
+                 | term
+
+term -> term "*" factor 
+      | term "/" factor 
+      | factor
+
+factor -> integer | float | id | "(" expr ")"
+
+args -> expr "," args | expr | ϵ
