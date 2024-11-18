@@ -15,7 +15,10 @@ Expression *Lvalue(Expression *n)
     else if (n->node_type == NodeType::ACCESS)
     {
         Access * a = (Access*) n;
-        return new Access(a->type, a->token, a->id, Rvalue(a->expr));
+        if (a->indexY) {
+            return new Access(a->type, a->token, a->id, Rvalue(a->indexX), Rvalue(a->indexY));
+        }
+        return new Access(a->type, a->token, a->id, Rvalue(a->indexX));
     }
     else
     {
@@ -92,7 +95,7 @@ Expression *Rvalue(Expression *n)
     {
         Access * acc = (Access*) Lvalue(n);
         Expression * left = Lvalue(acc->id);
-        Expression * right = Rvalue(acc->expr);
+        Expression * right = Rvalue(acc->indexX);
         cout << '\t' 
              << left->ToString()  
              << " = " 

@@ -82,8 +82,10 @@ struct Identifier : public Expression
 struct Access : public Expression
 {
     Expression * id;
-    Expression * expr;
+    Expression * indexX;
+    Expression * indexY;
     Access(int etype, Token * t, Expression * i, Expression * e);
+    Access(int etype, Token *t, Expression *i, Expression *e1, Expression *e2);
     string ToString();
 };
 

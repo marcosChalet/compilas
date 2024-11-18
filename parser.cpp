@@ -104,8 +104,16 @@ void Parser::Decls()
             if (!Match(Tag::INTEGER))
             {
                 stringstream ss;
-                ss << "o índice de um arranjo deve ser um valor inteiro";
+                ss << "o índice ou intervalor de um arranjo deve ser de valores inteiros";
                 throw SyntaxError{scanner->Lineno(), ss.str()};
+            }
+            if (Match(':')) {
+                if (!Match(Tag::INTEGER))
+                {
+                    stringstream ss;
+                    ss << "o índice ou intervalor de um arranjo deve ser de valores inteiros";
+                    throw SyntaxError{scanner->Lineno(), ss.str()};
+                }
             }
             if (!Match(']'))
             {
@@ -314,13 +322,30 @@ Expression *Parser::Local()
         Match(Tag::ID);
 
         // acesso a elemento de um arranjo
-        if (Match('['))
-        {
-            Expression * index = Bool();
-            expr = new Access(etype, new Token{Tag::ID, "[]"}, expr, index);
+        // if (Match('['))
+        // {
+        //     Expression * index = Bool();
+        //     expr = new Access(etype, new Token{Tag::ID, "[]"}, expr, index);
 
-            if (!Match(']'))
-            {
+        //     if (!Match(']'))
+        //     {
+        //         stringstream ss;
+        //         ss << "esperado ] no lugar de  \'" << lookahead->lexeme << "\'";
+        //         throw SyntaxError{scanner->Lineno(), ss.str()};
+        //     }
+        // }
+        if (Match('[')) {
+            Expression *index1 = Bool();
+            if (Match(':')) {
+                // Acesso a matriz bidimensional
+                Expression *index2 = Bool();
+                expr = new Access(etype, new Token{Tag::ID, "[:]"}, expr, index1, index2);
+            } else {
+                // Acesso a vetor unidimensional
+                expr = new Access(etype, new Token{Tag::ID, "[]"}, expr, index1);
+            }
+
+            if (!Match(']')) {
                 stringstream ss;
                 ss << "esperado ] no lugar de  \'" << lookahead->lexeme << "\'";
                 throw SyntaxError{scanner->Lineno(), ss.str()};

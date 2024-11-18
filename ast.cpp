@@ -147,16 +147,30 @@ Identifier::Identifier(int etype, Token *t) :
 Access::Access(int etype, Token *t, Expression *i, Expression *e) : 
     Expression(NodeType::ACCESS, etype, t), 
     id(i), 
-    expr(e) 
+    indexX(e) 
 {
 
 }
 
-string Access::ToString()
+Access::Access(int etype, Token *t, Expression *i, Expression *e1, Expression *e2)
+    : Expression(NodeType::ACCESS, etype, t), id(i), indexX(e1), indexY(e2)
 {
-    stringstream ss;
-    ss << id->ToString() << "[" << expr->ToString() << "]";
-    return ss.str();
+
+}
+
+
+// string Access::ToString()
+// {
+//     stringstream ss;
+//     ss << id->ToString() << "[" << expr->ToString() << "]";
+//     return ss.str();
+// }
+
+string Access::ToString() {
+    if (indexY)
+        return id->ToString() + "[" + indexX->ToString() + ":"+ indexY->ToString() + "]";
+    else
+        return id->ToString() + "[" + indexX->ToString() + "]";
 }
 
 // -------

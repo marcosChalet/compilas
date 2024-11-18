@@ -1,8 +1,15 @@
 int i int j int k float vet[10] bool flag
+int mat[10:20]
+
 i = 0
 j = 9
 k = 1
 flag = false
+mat[0:0] = 21
+
+if (mat[0:0] > 10) {
+    mat[0:0] = 5
+}
 
 do
 {
