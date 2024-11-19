@@ -19,11 +19,10 @@ while (i < 3) {
 }
 
 i = 0
-j = 0
-k = 0
-
 while (i < 3) {
+    j = 0
     while (j < 3) {
+        k = 0
         while (k < 3) {
             matR[i:j] = matR[i:j] + matA[i:k] * matB[k:j]
             k = k + 1
