@@ -156,8 +156,10 @@ void Traverse(Node *n)
             Traverse(a->id);
             cout << "[ ";
             Traverse(a->indexX);
-            cout << ":";
-            Traverse(a->indexY);
+            if (a->indexY) {
+                cout << ":";
+                Traverse(a->indexY);
+            }
             cout << "] ";
             break;
         }
