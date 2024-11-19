@@ -8,8 +8,6 @@ int matR[3:3]
 
 i = 0
 j = 0
-k = 0
-
 while (i < 3) {
     while (j < 3) {
         matR[i:j] = 0
