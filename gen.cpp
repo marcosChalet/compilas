@@ -87,24 +87,13 @@ Expression *Rvalue(Expression *n)
 
         if (access->indexY) {
             Expression * right = Lvalue(n);
+            Temp * temp = new Temp(access->type);
 
-            Temp * tempIdxLine = new Temp(access->type);
-            Temp * tempIdxCol = new Temp(access->type);
-            Temp * tempIdxVal = new Temp(access->type);
-
-            cout << '\t' << tempIdxLine->ToString() << " = " 
-                << access->indexX->ToString() << " * m"
+            cout << '\t' << temp->ToString() << " = "
+                << access->id->ToString() << "[" << access->indexX->ToString() << " * QC + " << access->indexY->ToString() << "]"
                 << endl;
 
-            cout << '\t' << tempIdxCol->ToString() << " = " 
-                << tempIdxLine->ToString() << " + " << access->indexY->ToString()
-                << endl;
-
-            cout << '\t' << "*" << tempIdxVal->ToString() << " = " 
-                << "base(" << access->id->ToString() << ") + " << tempIdxCol->ToString()
-                << endl;
-
-            return tempIdxVal;
+            return temp;
         }
 
         Temp * temp = new Temp(access->type);
