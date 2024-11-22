@@ -12,21 +12,6 @@ extern Lexer * scanner;
 
 Statement * Parser::Program()
 {
-    // program -> int main() block
-    // if (!Match(Tag::TYPE))
-    //     throw SyntaxError(scanner->Lineno(), "\'int\' esperado");
-
-    // if (!Match(Tag::MAIN))
-    //     throw SyntaxError(scanner->Lineno(), "\'main\' esperado");
-
-    // if (!Match('('))
-    //     throw SyntaxError(scanner->Lineno(), "\'(\' esperado");
-
-    // if (!Match(')'))
-    //     throw SyntaxError(scanner->Lineno(), "\')\' esperado");
-
-    // return Block();
-
 
     // ------------------------------------
     // tabela de símbolos para Program
@@ -122,14 +107,6 @@ void Parser::Decls()
                 throw SyntaxError{scanner->Lineno(), ss.str()};
             }
         }
-
-        // verififica ponto e vírgula
-        // if (!Match(';'))
-        // {
-        //     stringstream ss;
-        //     ss << "encontrado \'" << lookahead->lexeme << "\' no lugar de ';'";
-        //     throw SyntaxError{scanner->Lineno(), ss.str()};
-        // }
     }
 }
 
@@ -184,12 +161,6 @@ Statement *Parser::Stmt()
         }
         Expression *right = Bool();
         stmt = new Assign(left, right);
-        // if (!Match(';'))
-        // {
-        //     stringstream ss;
-        //     ss << "esperado ; no lugar de  \'" << lookahead->lexeme << "\'";
-        //     throw SyntaxError{scanner->Lineno(), ss.str()};
-        // }
         return stmt;
     }
 
@@ -320,12 +291,6 @@ Statement *Parser::Stmt()
             ss << "esperado ) no lugar de  \'" << lookahead->lexeme << "\'";
             throw SyntaxError{scanner->Lineno(), ss.str()};
         }
-        // if (!Match(';'))
-        // {
-        //     stringstream ss;
-        //     ss << "esperado ; no lugar de  \'" << lookahead->lexeme << "\'";
-        //     throw SyntaxError{scanner->Lineno(), ss.str()};
-        // }
         return stmt;
     }
     // stmt -> block
@@ -375,20 +340,6 @@ Expression *Parser::Local()
         // identificador
         expr = new Identifier(etype, new Token{*lookahead});
         Match(Tag::ID);
-
-        // acesso a elemento de um arranjo
-        // if (Match('['))
-        // {
-        //     Expression * index = Bool();
-        //     expr = new Access(etype, new Token{Tag::ID, "[]"}, expr, index);
-
-        //     if (!Match(']'))
-        //     {
-        //         stringstream ss;
-        //         ss << "esperado ] no lugar de  \'" << lookahead->lexeme << "\'";
-        //         throw SyntaxError{scanner->Lineno(), ss.str()};
-        //     }
-        // }
         if (Match('[')) {
             Expression *index1 = Bool();
             if (Match(':')) {
