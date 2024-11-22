@@ -84,6 +84,29 @@ Expression *Rvalue(Expression *n)
     else if (n->node_type == NodeType::ACCESS)
     {
         Access * access = (Access*) n;
+
+        if (access->indexY) {
+            Expression * right = Lvalue(n);
+
+            Temp * tempIdxLine = new Temp(access->type);
+            Temp * tempIdxCol = new Temp(access->type);
+            Temp * tempIdxVal = new Temp(access->type);
+
+            cout << '\t' << tempIdxLine->ToString() << " = " 
+                << access->indexX->ToString() << " * m"
+                << endl;
+
+            cout << '\t' << tempIdxCol->ToString() << " = " 
+                << tempIdxLine->ToString() << " + " << access->indexY->ToString()
+                << endl;
+
+            cout << '\t' << "*" << tempIdxVal->ToString() << " = " 
+                << "base(" << access->id->ToString() << ") + " << tempIdxCol->ToString()
+                << endl;
+
+            return tempIdxVal;
+        }
+
         Temp * temp = new Temp(access->type);
         Expression * right = Lvalue(n);
         cout << '\t' << temp->ToString() << " = " 
