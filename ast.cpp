@@ -300,7 +300,7 @@ Assign::Assign(Expression *i, Expression *e) :
 }
 
 void Assign::Gen()
-{
+{ 
     Expression * left = Lvalue(id);
     Expression * right = Rvalue(expr);
     cout << '\t' << left->ToString() << " = " << right->ToString() << endl;
@@ -377,4 +377,33 @@ void DoWhile::Gen()
     stmt->Gen();
     Expression * n = Rvalue(expr);
     cout << "\tifTrue " << n->ToString() << " goto L" << before << endl;
+}
+
+// --------
+// FOR
+// --------
+
+For::For(Assign *init, Expression *condition, Assign *increment, Statement *s) : 
+    Statement(NodeType::FOR_STMT),
+    for_init(init),
+    for_condition(condition),
+    for_increment(increment),
+    stmt(s)
+{
+    before = NewLabel();
+    after = NewLabel();
+}
+
+void For::Gen(){
+
+    for_init->Gen();
+
+    cout << 'L' << before << ':' << endl;
+    Expression * n = Rvalue(for_condition);
+    cout << "\tifFalse " << n->ToString() << " goto L" << after << endl;
+    stmt->Gen();
+    Expression *inc_reg = Rvalue(for_increment->expr);  //Registrador que guarda o incremento
+    cout << "\t" << for_increment->id->ToString() << " = " <<  inc_reg->ToString() << endl;
+    cout << "\tgoto L" << before << endl;
+    cout << 'L' << after << ':' << endl;     
 }
