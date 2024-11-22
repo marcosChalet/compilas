@@ -21,6 +21,7 @@ enum NodeType
     IF_STMT,
     WHILE_STMT,
     DOWHILE_STMT,
+    FOR_STMT,
     TEMP
 };
 
@@ -148,6 +149,18 @@ struct While : public Statement
     Expression *expr;
     Statement *stmt;
     While(Expression *e, Statement *s);
+    void Gen();
+};
+
+struct For : public Statement
+{
+    unsigned before;
+    unsigned after;
+    Assign *for_init;
+    Expression *for_condition;
+    Assign *for_increment;
+    Statement *stmt;
+    For(Assign *init, Expression *condition, Assign *increment, Statement *s);
     void Gen();
 };
 

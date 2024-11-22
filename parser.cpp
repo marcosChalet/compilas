@@ -139,13 +139,14 @@ Statement *Parser::Stmts()
     //        | empty
 
     Statement *seq = nullptr;
-
+    
     switch (lookahead->tag)
     {
     // stmts -> stmt stmts
     case Tag::ID:
     case Tag::IF:
     case Tag::WHILE:
+    case Tag::FOR:
     case Tag::DO:
     case '{':
     {
@@ -217,7 +218,61 @@ Statement *Parser::Stmt()
         ((If*)stmt)->stmt = inst;
         return stmt;
     }
+    case Tag::FOR:
+    {
+        Match(Tag::FOR);
+        if (!Match('('))
+        {
+            stringstream ss;
+            ss << "esperado ( no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
 
+        Expression *left = Local();
+        if (!Match('='))
+        {
+            stringstream ss;
+            ss << "esperado = no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        Expression *right = Ari();
+        Assign *init = new Assign(left, right);
+
+        if (!Match(';')){
+            stringstream ss;
+            ss << "esperado ; no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+    
+        Expression *cond = Bool();
+
+        if (!Match(';')){
+            stringstream ss;
+            ss << "esperado ; no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+
+        Expression *left_increment = Local();
+        if (!Match('='))
+        {
+            stringstream ss;
+            ss << "esperado = no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        Expression *right_increment = Ari();
+        Assign *increment = new Assign(left_increment, right_increment);
+
+        if (!Match(')'))
+        {
+            stringstream ss;
+            ss << "esperado ) no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        Statement *inst = Stmt();
+        stmt = new For(init, cond, increment, inst);
+
+        return stmt;
+    }
     // stmt -> while (bool) stmt
     case Tag::WHILE:
     {
@@ -688,7 +743,8 @@ Expression *Parser::Factor()
 }
 
 bool Parser::Match(int tag)
-{
+{   
+    
     if (tag == lookahead->tag)
     {
         lookahead = scanner->Scan();
