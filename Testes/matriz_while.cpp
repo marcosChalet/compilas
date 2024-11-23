@@ -2,16 +2,16 @@ int i
 int j
 int k
 
-int matA[3:3]
-int matB[3:3]
-int matR[3:3]
+int matA[4:4]
+int matB[4:4]
+int matR[4:4]
 
 i = 0
-while (i < 3) {
+while (i < 4) {
     j = 0
-    while (j < 3) {
+    while (j < 4) {
         k = 0
-        while (k < 3) {
+        while (k < 4) {
             matR[i:j] = matR[i:j] + matA[i:k] * matB[k:j]
             k = k + 1
         }
