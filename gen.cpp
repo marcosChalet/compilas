@@ -90,7 +90,7 @@ Expression *Rvalue(Expression *n)
             Temp * temp = new Temp(access->type);
 
             cout << '\t' << temp->ToString() << " = "
-                << access->id->ToString() << "[" << access->indexX->ToString() << " * QC + " << access->indexY->ToString() << "]"
+                << access->id->ToString() << "[" << access->indexX->ToString() << " * 4 + " << access->indexY->ToString() << "]"
                 << endl;
 
             return temp;
