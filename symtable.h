@@ -13,6 +13,8 @@ struct Symbol
 	string var;
 	string type;
 	string Func;
+	int valX;
+	int valY;
 };
 
 

@@ -13,6 +13,7 @@ using std::cout;
 
 
 extern Lexer * scanner;
+extern SymTable * symtable;
 
 Statement * Parser::Program()
 {
@@ -78,8 +79,56 @@ void Parser::Decls()
         string name{lookahead->lexeme};
         Match(Tag::ID);
 
+        // inicializa dimensões como não preenchidas
+        int valX = -1;
+        int valY = -1;
+
+        // verifica se é uma declaração de arranjo
+        if (Match('['))
+        {
+            if (lookahead->tag != Tag::INTEGER)
+            {
+                stringstream ss;
+                ss << "o índice ou intervalo de um arranjo deve ser de valores inteiros";
+                throw SyntaxError(scanner->Lineno(), ss.str());
+            }
+            valX = stoi(lookahead->lexeme);
+            if (!Match(Tag::INTEGER))
+            {
+                stringstream ss;
+                ss << "o índice ou intervalor de um arranjo deve ser de valores inteiros";
+                throw SyntaxError{scanner->Lineno(), ss.str()};
+            }
+
+            // verifica se há uma segunda dimensão
+            if (Match(':'))
+            {
+                if (lookahead->tag != Tag::INTEGER) {
+                    stringstream ss;
+                    ss << "o índice ou intervalo de um arranjo deve ser de valores inteiros";
+                    throw SyntaxError(scanner->Lineno(), ss.str());
+                }
+
+                valY = stoi(lookahead->lexeme);
+
+                if (!Match(Tag::INTEGER))
+                {
+                    stringstream ss;
+                    ss << "o índice ou intervalor de um arranjo deve ser de valores inteiros";
+                    throw SyntaxError{scanner->Lineno(), ss.str()};
+                }
+
+                if (!Match(']'))
+                {
+                    stringstream ss;
+                    ss << "esperado ']' no lugar de  \'" << lookahead->lexeme << "\'";
+                    throw SyntaxError{scanner->Lineno(), ss.str()};
+                }
+            }
+        }
+
         // cria símbolo
-        Symbol s{name, type};
+        Symbol s{name, type, valX, valY};
 
         // insere variável na tabela de símbolos
         if (!symtable->Insert(name, s))
@@ -89,33 +138,9 @@ void Parser::Decls()
             ss << "variável \"" << name << "\" já definida";
             throw SyntaxError(scanner->Lineno(), ss.str());
         }
-
-        // verifica se é uma declaração de arranjo
-        if (Match('['))
-        {
-            if (!Match(Tag::INTEGER))
-            {
-                stringstream ss;
-                ss << "o índice ou intervalor de um arranjo deve ser de valores inteiros";
-                throw SyntaxError{scanner->Lineno(), ss.str()};
-            }
-            if (Match(':')) {
-                if (!Match(Tag::INTEGER))
-                {
-                    stringstream ss;
-                    ss << "o índice ou intervalor de um arranjo deve ser de valores inteiros";
-                    throw SyntaxError{scanner->Lineno(), ss.str()};
-                }
-            }
-            if (!Match(']'))
-            {
-                stringstream ss;
-                ss << "esperado ] no lugar de  \'" << lookahead->lexeme << "\'";
-                throw SyntaxError{scanner->Lineno(), ss.str()};
-            }
-        }
     }
 }
+
 
 Statement *Parser::Stmts()
 {
