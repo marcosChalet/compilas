@@ -1,7 +1,7 @@
 
 #ifndef COMPILER_AST
 #define COMPILER_AST
-
+#include <vector>
 #include "lexer.h"
 
 enum NodeType
@@ -22,7 +22,9 @@ enum NodeType
     WHILE_STMT,
     DOWHILE_STMT,
     FOR_STMT,
-    TEMP
+    FUNC_STMT,
+    TEMP,
+    FUNC_CALL
 };
 
 enum ExprType
@@ -173,4 +175,36 @@ struct DoWhile : public Statement
     void Gen();
 };
 
+struct Func : public Statement
+{
+    int after;
+    string funcName;
+    int returnType;
+    string ret;
+
+    std::vector<string> paramTypes;
+    std::vector<string> paramNames;
+
+    Statement *body;
+    Statement *stmt;
+    Expression *expr;
+    Func(std::string funcName, int returnType, std::vector<string> paramTypes, std::vector<string> paramNames, Statement *body, string ret);
+    void Gen();
+};
+struct FuncCall : public Statement
+{
+    int after;
+    string funcName;
+    int returnType;
+    string ret;
+
+    std::vector<string> paramTypes;
+    std::vector<string> paramNames;
+    std::vector<string> value;
+    std::vector<Expression*> args;
+    Statement *stmt;
+    Expression *expr;
+    FuncCall(std::string funcName,  std::vector<Expression*> args);
+    void Gen();
+};
 #endif

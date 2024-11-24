@@ -11,7 +11,7 @@ private:
 	Token * lookahead;
 	
 	Statement * Program();
-	Statement * Block();
+	Statement * Block(string &str = *(new string("op")));
 	void Decls();
 	void Decl();
 	Statement * Stmts();
