@@ -5,6 +5,7 @@ using std::cout;
 using std::endl;
 
 extern Lexer * scanner;
+extern SymTable * symtable;
 
 Expression *Lvalue(Expression *n)
 {
@@ -89,8 +90,10 @@ Expression *Rvalue(Expression *n)
             Expression * right = Lvalue(n);
             Temp * temp = new Temp(access->type);
 
+            Symbol * s = symtable->Find(access->id->ToString());
+
             cout << '\t' << temp->ToString() << " = "
-                << access->id->ToString() << "[" << access->indexX->ToString() << " * 4 + " << access->indexY->ToString() << "]"
+                << access->id->ToString() << "[" << access->indexX->ToString() << " * " << s->valY << " + " << access->indexY->ToString() << "]"
                 << endl;
 
             return temp;

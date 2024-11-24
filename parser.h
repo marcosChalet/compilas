@@ -8,7 +8,6 @@
 class Parser
 {
 private:
-	SymTable * symtable;
 	Token * lookahead;
 	
 	Statement * Program();
