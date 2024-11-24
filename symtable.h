@@ -12,6 +12,7 @@ struct Symbol
 {
 	string var;
 	string type;
+	string Func;
 };
 
 

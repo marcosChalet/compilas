@@ -3,10 +3,14 @@
 #include <iostream>
 #include <sstream>
 #include <cctype>
+
 using std::cin;
 using std::cout;
 using std::endl;
 using std::stringstream;
+using namespace std;
+using std::cout;
+
 
 extern Lexer * scanner;
 
@@ -23,22 +27,25 @@ Statement * Parser::Program()
     return Stmts();
 }
 
-Statement * Parser::Block()
+Statement * Parser::Block(string &str)
 {
     // block -> { decls stmts }
     if (!Match('{'))
         throw SyntaxError(scanner->Lineno(), "\'{\' esperado");
-
+    
     // ------------------------------------
     // nova tabela de símbolos para o bloco
     // ------------------------------------
     SymTable *saved = symtable;
     symtable = new SymTable(symtable);
     // ------------------------------------
-
+    
     Decls();
     Statement * sts = Stmts();
-
+    if (Match(Tag::RETURN)){
+        str = lookahead->lexeme;
+        Match(Tag::ID);
+    };
     if (!Match('}'))
         throw SyntaxError(scanner->Lineno(), "\'}\' esperado");
 
@@ -125,6 +132,8 @@ Statement *Parser::Stmts()
     case Tag::WHILE:
     case Tag::FOR:
     case Tag::DO:
+    case Tag::FUNC:
+
     case '{':
     {
         Statement *st = Stmt();
@@ -146,24 +155,25 @@ Statement *Parser::Stmt()
     //        | block
 
     Statement *stmt = nullptr;
-
     switch (lookahead->tag)
     {
     // stmt -> local = bool;
     case Tag::ID:
     {
         Expression *left = Local();
+        cout << lookahead->lexeme << endl;
+
         if (!Match('='))
         {
             stringstream ss;
             ss << "esperado = no lugar de  \'" << lookahead->lexeme << "\'";
             throw SyntaxError{scanner->Lineno(), ss.str()};
         }
+
         Expression *right = Bool();
         stmt = new Assign(left, right);
         return stmt;
     }
-
     // stmt -> if (bool) stmt
     case Tag::IF:
     {
@@ -198,7 +208,8 @@ Statement *Parser::Stmt()
             ss << "esperado ( no lugar de  \'" << lookahead->lexeme << "\'";
             throw SyntaxError{scanner->Lineno(), ss.str()};
         }
-
+        
+        Decls();
         Expression *left = Local();
         if (!Match('='))
         {
@@ -293,7 +304,102 @@ Statement *Parser::Stmt()
         }
         return stmt;
     }
+    // stmt -> func
+    case Tag::FUNC:
+    {
+        Match(Tag::FUNC);
+
+        // Capturar o nome da função
+        if (lookahead->tag != Tag::ID)
+        {
+            stringstream ss;
+            ss << "esperado um identificador para o nome da função, mas encontrado: \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        std::string funcName = lookahead->lexeme;
+        string name{lookahead->lexeme};
+        Match(Tag::ID);
+
+        // Capturar os parâmetros entre parênteses ()
+        if (!Match('('))
+        {
+            stringstream ss;
+            ss << "esperado ( após o nome da função, mas encontrado: \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        std::vector<string> paramTypes;
+        std::vector<string> paramNames;
+        if (lookahead->tag != ')') // Verificar se não está vazio
+        {
+            do
+            {
+                // captura nome do tipo
+                string type{lookahead->lexeme};
+                paramTypes.push_back(lookahead->lexeme);
+                Match(Tag::TYPE);
+
+                // captura nome do identificador
+                string name{lookahead->lexeme};
+                paramNames.push_back(lookahead->lexeme);
+                Match(Tag::ID);
+
+                // cria símbolo
+                Symbol s{name, type};
+
+                // insere variável na tabela de símbolos
+                if (!symtable->Insert(name, s))
+                {
+                    // a inserção falha quando a variável já está na tabela
+                    stringstream ss;
+                    ss << "variável \"" << name << "\" já definida";
+                    throw SyntaxError(scanner->Lineno(), ss.str());
+                }
+            } while (Match(',')); // Permitir lista separada por vírgulas
+        }
+
+        if (!Match(')'))
+        {
+            stringstream ss;
+            ss << "esperado ) para fechar a lista de parâmetros, mas encontrado: \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        if (!Match(':'))
+        {
+            stringstream ss;
+            ss << "esperado : antes do tipo de retorno da função, mas encontrado: \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        if (lookahead->tag != Tag::TYPE)
+        {
+            stringstream ss;
+            ss << "esperado um tipo de retorno, mas encontrado: \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        int returnType = lookahead->tag;
+        string type{lookahead->lexeme};
+        Match(Tag::TYPE);
+
+                // cria símbolo
+        Symbol s{name, type};
+        // insere variável na tabela de símbolos
+        if (!symtable->Insert(name, s))
+        {
+            // a inserção falha quando a variável já está na tabela
+            stringstream ss;
+            ss << "variável \"" << name << "\" já definida";
+            throw SyntaxError(scanner->Lineno(), ss.str());
+        }
+
+        Statement *body;
+        // Corpo da função (espera um bloco de instruções)
+        string ret;
+        body = Block(ret);
+        stmt = new Func(funcName, returnType, paramTypes, paramNames, body, ret);
+        // Criar o nó da função
+        return stmt;
+    }
     // stmt -> block
+
     case '{':
     {
         stmt = Block();
