@@ -7,7 +7,7 @@ decl -> type id { symtable.insert(id, type) }
 
 type -> "int" | "float" | "bool"
 
-matrix_decl -> "matrix" id "[" integer ":" integer "]" "=" matrix_init { symtable.insert(id, "matrix") }
+matrix_decl -> type id "[" integer ":" integer "]"
 
 matrix_init -> "{" matrix_rows "}"
 matrix_rows -> "{" values "}" | "{" values "}" "," matrix_rows
@@ -29,9 +29,9 @@ for_stmt -> "for" "(" type id "=" expr ";" expr ";" expr ")" block
 
 while_stmt -> "while" "(" expr ")" block
 
-do_while_stmt -> "do" block "while" "(" expr ")" ";"
+do_while_stmt -> "do" block "while" "(" expr ")"
 
-func_decl -> "func" id "(" params ")" block
+func_decl -> "func" id "(" params ")"":" type block
 
 params -> param "," params | param | ϵ
 param -> type id
