@@ -186,7 +186,6 @@ Statement *Parser::Stmt()
     case Tag::ID:
     {
         Expression *left = Local();
-        cout << lookahead->lexeme << endl;
 
         if (!Match('='))
         {
