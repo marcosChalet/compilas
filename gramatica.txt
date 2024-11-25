@@ -25,7 +25,7 @@ stmt -> if_stmt
 if_stmt -> "if" "(" expr ")" block else_block
 else_block -> "else" block | ϵ
 
-for_stmt -> "for" "(" type id "=" expr ";" expr ";" expr ")" block
+for_stmt -> "for" "(" id "=" expr ";" expr ";" id = expr ")" block
 
 while_stmt -> "while" "(" expr ")" block
 

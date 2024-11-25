@@ -9,19 +9,23 @@ extern std::ifstream fin;
 Lexer::Lexer()
 {
 	// insere palavras-reservadas na tabela
-	token_table["main"]  = Token{ Tag::MAIN, "main" };
-	token_table["int"]   = Token{ Tag::TYPE, "int" };
-	token_table["float"] = Token{ Tag::TYPE, "float" };
-	token_table["bool"] = Token{ Tag::TYPE, "bool" };
-	token_table["true"]  = Token{ Tag::TRUE, "true" };
-	token_table["false"] = Token{ Tag::FALSE, "false" };
-	token_table["if"]    = Token{ Tag::IF,    "if" };
-	token_table["while"] = Token{ Tag::WHILE, "while" };
-	token_table["do"]    = Token{ Tag::DO,    "do" };
+	token_table["main"]   = Token{ Tag::MAIN,     "main" };
+	token_table["int"]    = Token{ Tag::TYPE,      "int" };
+	token_table["float"]  = Token{ Tag::TYPE,    "float" };
+	token_table["bool"]   = Token{ Tag::TYPE,     "bool" };
+	token_table["true"]   = Token{ Tag::TRUE,     "true" };
+	token_table["false"]  = Token{ Tag::FALSE,   "false" };
+	token_table["if"]     = Token{ Tag::IF,         "if" };
+	token_table["while"]  = Token{ Tag::WHILE,   "while" };
+	token_table["do"]     = Token{ Tag::DO,         "do" };
+	token_table["for"]	  = Token{ Tag::FOR,       "for" };
+	token_table["func"]	  = Token{ Tag::FUNC,     "func" };
+	token_table["return"] = Token{ Tag::RETURN, "return" };
+
 	
 	// inicia leitura da entrada
 	peek = fin.get();
-}
+}\
 
 // retorna número da linha atual
 int Lexer::Lineno()
@@ -139,7 +143,6 @@ Token * Lexer::Scan()
 			peek = fin.get();
 		} 
 		while (isalpha(peek));
-
 		string s = ss.str();
 		auto pos = token_table.find(s);
 

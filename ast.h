@@ -1,7 +1,7 @@
 
 #ifndef COMPILER_AST
 #define COMPILER_AST
-
+#include <vector>
 #include "lexer.h"
 
 enum NodeType
@@ -21,7 +21,10 @@ enum NodeType
     IF_STMT,
     WHILE_STMT,
     DOWHILE_STMT,
-    TEMP
+    FOR_STMT,
+    FUNC_STMT,
+    TEMP,
+    FUNC_CALL
 };
 
 enum ExprType
@@ -82,8 +85,10 @@ struct Identifier : public Expression
 struct Access : public Expression
 {
     Expression * id;
-    Expression * expr;
+    Expression * indexX;
+    Expression * indexY;
     Access(int etype, Token * t, Expression * i, Expression * e);
+    Access(int etype, Token *t, Expression *i, Expression *e1, Expression *e2);
     string ToString();
 };
 
@@ -149,6 +154,18 @@ struct While : public Statement
     void Gen();
 };
 
+struct For : public Statement
+{
+    unsigned before;
+    unsigned after;
+    Assign *for_init;
+    Expression *for_condition;
+    Assign *for_increment;
+    Statement *stmt;
+    For(Assign *init, Expression *condition, Assign *increment, Statement *s);
+    void Gen();
+};
+
 struct DoWhile : public Statement
 {
     unsigned before;
@@ -158,4 +175,36 @@ struct DoWhile : public Statement
     void Gen();
 };
 
+struct Func : public Statement
+{
+    int after;
+    string funcName;
+    int returnType;
+    string ret;
+
+    std::vector<string> paramTypes;
+    std::vector<string> paramNames;
+
+    Statement *body;
+    Statement *stmt;
+    Expression *expr;
+    Func(std::string funcName, int returnType, std::vector<string> paramTypes, std::vector<string> paramNames, Statement *body, string ret);
+    void Gen();
+};
+struct FuncCall : public Statement
+{
+    int after;
+    string funcName;
+    int returnType;
+    string ret;
+
+    std::vector<string> paramTypes;
+    std::vector<string> paramNames;
+    std::vector<string> value;
+    std::vector<Expression*> args;
+    Statement *stmt;
+    Expression *expr;
+    FuncCall(std::string funcName,  std::vector<Expression*> args);
+    void Gen();
+};
 #endif

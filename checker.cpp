@@ -155,7 +155,11 @@ void Traverse(Node *n)
             Access *a = (Access*) n;
             Traverse(a->id);
             cout << "[ ";
-            Traverse(a->expr);
+            Traverse(a->indexX);
+            if (a->indexY) {
+                cout << ":";
+                Traverse(a->indexY);
+            }
             cout << "] ";
             break;
         }

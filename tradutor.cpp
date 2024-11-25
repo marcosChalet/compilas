@@ -12,6 +12,7 @@ using namespace std;
 
 ifstream fin;
 Lexer * scanner;
+SymTable * symtable;
 
 // programa pode receber nomes de arquivos
 int main(int argc, char **argv)

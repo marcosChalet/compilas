@@ -3,47 +3,50 @@
 #include <iostream>
 #include <sstream>
 #include <cctype>
+
 using std::cin;
 using std::cout;
 using std::endl;
 using std::stringstream;
+using namespace std;
+using std::cout;
+
 
 extern Lexer * scanner;
+extern SymTable * symtable;
 
 Statement * Parser::Program()
 {
-    // program -> int main() block
-    if (!Match(Tag::TYPE))
-        throw SyntaxError(scanner->Lineno(), "\'int\' esperado");
 
-    if (!Match(Tag::MAIN))
-        throw SyntaxError(scanner->Lineno(), "\'main\' esperado");
+    // ------------------------------------
+    // tabela de símbolos para Program
+    // ------------------------------------
+    symtable = new SymTable(symtable);
+    // ------------------------------------
 
-    if (!Match('('))
-        throw SyntaxError(scanner->Lineno(), "\'(\' esperado");
-
-    if (!Match(')'))
-        throw SyntaxError(scanner->Lineno(), "\')\' esperado");
-
-    return Block();
+    Decls();
+    return Stmts();
 }
 
-Statement * Parser::Block()
+Statement * Parser::Block(string &str)
 {
     // block -> { decls stmts }
     if (!Match('{'))
         throw SyntaxError(scanner->Lineno(), "\'{\' esperado");
-
+    
     // ------------------------------------
     // nova tabela de símbolos para o bloco
     // ------------------------------------
     SymTable *saved = symtable;
     symtable = new SymTable(symtable);
     // ------------------------------------
-
+    
     Decls();
     Statement * sts = Stmts();
-
+    if (Match(Tag::RETURN)){
+        str = lookahead->lexeme;
+        Match(Tag::ID);
+    };
     if (!Match('}'))
         throw SyntaxError(scanner->Lineno(), "\'}\' esperado");
 
@@ -76,8 +79,56 @@ void Parser::Decls()
         string name{lookahead->lexeme};
         Match(Tag::ID);
 
+        // inicializa dimensões como não preenchidas
+        int valX = -1;
+        int valY = -1;
+
+        // verifica se é uma declaração de arranjo
+        if (Match('['))
+        {
+            if (lookahead->tag != Tag::INTEGER)
+            {
+                stringstream ss;
+                ss << "o índice ou intervalo de um arranjo deve ser de valores inteiros";
+                throw SyntaxError(scanner->Lineno(), ss.str());
+            }
+            valX = stoi(lookahead->lexeme);
+            if (!Match(Tag::INTEGER))
+            {
+                stringstream ss;
+                ss << "o índice ou intervalor de um arranjo deve ser de valores inteiros";
+                throw SyntaxError{scanner->Lineno(), ss.str()};
+            }
+
+            // verifica se há uma segunda dimensão
+            if (Match(':'))
+            {
+                if (lookahead->tag != Tag::INTEGER) {
+                    stringstream ss;
+                    ss << "o índice ou intervalo de um arranjo deve ser de valores inteiros";
+                    throw SyntaxError(scanner->Lineno(), ss.str());
+                }
+
+                valY = stoi(lookahead->lexeme);
+
+                if (!Match(Tag::INTEGER))
+                {
+                    stringstream ss;
+                    ss << "o índice ou intervalor de um arranjo deve ser de valores inteiros";
+                    throw SyntaxError{scanner->Lineno(), ss.str()};
+                }
+
+                if (!Match(']'))
+                {
+                    stringstream ss;
+                    ss << "esperado ']' no lugar de  \'" << lookahead->lexeme << "\'";
+                    throw SyntaxError{scanner->Lineno(), ss.str()};
+                }
+            }
+        }
+
         // cria símbolo
-        Symbol s{name, type};
+        Symbol s{name, type, valX, valY};
 
         // insere variável na tabela de símbolos
         if (!symtable->Insert(name, s))
@@ -87,33 +138,9 @@ void Parser::Decls()
             ss << "variável \"" << name << "\" já definida";
             throw SyntaxError(scanner->Lineno(), ss.str());
         }
-
-        // verifica se é uma declaração de arranjo
-        if (Match('['))
-        {
-            if (!Match(Tag::INTEGER))
-            {
-                stringstream ss;
-                ss << "o índice de um arranjo deve ser um valor inteiro";
-                throw SyntaxError{scanner->Lineno(), ss.str()};
-            }
-            if (!Match(']'))
-            {
-                stringstream ss;
-                ss << "esperado ] no lugar de  \'" << lookahead->lexeme << "\'";
-                throw SyntaxError{scanner->Lineno(), ss.str()};
-            }
-        }
-
-        // verififica ponto e vírgula
-        if (!Match(';'))
-        {
-            stringstream ss;
-            ss << "encontrado \'" << lookahead->lexeme << "\' no lugar de ';'";
-            throw SyntaxError{scanner->Lineno(), ss.str()};
-        }
     }
 }
+
 
 Statement *Parser::Stmts()
 {
@@ -121,14 +148,17 @@ Statement *Parser::Stmts()
     //        | empty
 
     Statement *seq = nullptr;
-
+    
     switch (lookahead->tag)
     {
     // stmts -> stmt stmts
     case Tag::ID:
     case Tag::IF:
     case Tag::WHILE:
+    case Tag::FOR:
     case Tag::DO:
+    case Tag::FUNC:
+
     case '{':
     {
         Statement *st = Stmt();
@@ -150,30 +180,24 @@ Statement *Parser::Stmt()
     //        | block
 
     Statement *stmt = nullptr;
-
     switch (lookahead->tag)
     {
     // stmt -> local = bool;
     case Tag::ID:
     {
         Expression *left = Local();
+
         if (!Match('='))
         {
             stringstream ss;
             ss << "esperado = no lugar de  \'" << lookahead->lexeme << "\'";
             throw SyntaxError{scanner->Lineno(), ss.str()};
         }
+
         Expression *right = Bool();
         stmt = new Assign(left, right);
-        if (!Match(';'))
-        {
-            stringstream ss;
-            ss << "esperado ; no lugar de  \'" << lookahead->lexeme << "\'";
-            throw SyntaxError{scanner->Lineno(), ss.str()};
-        }
         return stmt;
     }
-
     // stmt -> if (bool) stmt
     case Tag::IF:
     {
@@ -199,7 +223,62 @@ Statement *Parser::Stmt()
         ((If*)stmt)->stmt = inst;
         return stmt;
     }
+    case Tag::FOR:
+    {
+        Match(Tag::FOR);
+        if (!Match('('))
+        {
+            stringstream ss;
+            ss << "esperado ( no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        
+        Decls();
+        Expression *left = Local();
+        if (!Match('='))
+        {
+            stringstream ss;
+            ss << "esperado = no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        Expression *right = Ari();
+        Assign *init = new Assign(left, right);
 
+        if (!Match(';')){
+            stringstream ss;
+            ss << "esperado ; no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+    
+        Expression *cond = Bool();
+
+        if (!Match(';')){
+            stringstream ss;
+            ss << "esperado ; no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+
+        Expression *left_increment = Local();
+        if (!Match('='))
+        {
+            stringstream ss;
+            ss << "esperado = no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        Expression *right_increment = Ari();
+        Assign *increment = new Assign(left_increment, right_increment);
+
+        if (!Match(')'))
+        {
+            stringstream ss;
+            ss << "esperado ) no lugar de  \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        Statement *inst = Stmt();
+        stmt = new For(init, cond, increment, inst);
+
+        return stmt;
+    }
     // stmt -> while (bool) stmt
     case Tag::WHILE:
     {
@@ -247,15 +326,104 @@ Statement *Parser::Stmt()
             ss << "esperado ) no lugar de  \'" << lookahead->lexeme << "\'";
             throw SyntaxError{scanner->Lineno(), ss.str()};
         }
-        if (!Match(';'))
+        return stmt;
+    }
+    // stmt -> func
+    case Tag::FUNC:
+    {
+        Match(Tag::FUNC);
+
+        // Capturar o nome da função
+        if (lookahead->tag != Tag::ID)
         {
             stringstream ss;
-            ss << "esperado ; no lugar de  \'" << lookahead->lexeme << "\'";
+            ss << "esperado um identificador para o nome da função, mas encontrado: \'" << lookahead->lexeme << "\'";
             throw SyntaxError{scanner->Lineno(), ss.str()};
         }
+        std::string funcName = lookahead->lexeme;
+        string name{lookahead->lexeme};
+        Match(Tag::ID);
+
+        // Capturar os parâmetros entre parênteses ()
+        if (!Match('('))
+        {
+            stringstream ss;
+            ss << "esperado ( após o nome da função, mas encontrado: \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        std::vector<string> paramTypes;
+        std::vector<string> paramNames;
+        if (lookahead->tag != ')') // Verificar se não está vazio
+        {
+            do
+            {
+                // captura nome do tipo
+                string type{lookahead->lexeme};
+                paramTypes.push_back(lookahead->lexeme);
+                Match(Tag::TYPE);
+
+                // captura nome do identificador
+                string name{lookahead->lexeme};
+                paramNames.push_back(lookahead->lexeme);
+                Match(Tag::ID);
+
+                // cria símbolo
+                Symbol s{name, type};
+
+                // insere variável na tabela de símbolos
+                if (!symtable->Insert(name, s))
+                {
+                    // a inserção falha quando a variável já está na tabela
+                    stringstream ss;
+                    ss << "variável \"" << name << "\" já definida";
+                    throw SyntaxError(scanner->Lineno(), ss.str());
+                }
+            } while (Match(',')); // Permitir lista separada por vírgulas
+        }
+
+        if (!Match(')'))
+        {
+            stringstream ss;
+            ss << "esperado ) para fechar a lista de parâmetros, mas encontrado: \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        if (!Match(':'))
+        {
+            stringstream ss;
+            ss << "esperado : antes do tipo de retorno da função, mas encontrado: \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        if (lookahead->tag != Tag::TYPE)
+        {
+            stringstream ss;
+            ss << "esperado um tipo de retorno, mas encontrado: \'" << lookahead->lexeme << "\'";
+            throw SyntaxError{scanner->Lineno(), ss.str()};
+        }
+        int returnType = lookahead->tag;
+        string type{lookahead->lexeme};
+        Match(Tag::TYPE);
+
+                // cria símbolo
+        Symbol s{name, type};
+        // insere variável na tabela de símbolos
+        if (!symtable->Insert(name, s))
+        {
+            // a inserção falha quando a variável já está na tabela
+            stringstream ss;
+            ss << "variável \"" << name << "\" já definida";
+            throw SyntaxError(scanner->Lineno(), ss.str());
+        }
+
+        Statement *body;
+        // Corpo da função (espera um bloco de instruções)
+        string ret;
+        body = Block(ret);
+        stmt = new Func(funcName, returnType, paramTypes, paramNames, body, ret);
+        // Criar o nó da função
         return stmt;
     }
     // stmt -> block
+
     case '{':
     {
         stmt = Block();
@@ -302,15 +470,18 @@ Expression *Parser::Local()
         // identificador
         expr = new Identifier(etype, new Token{*lookahead});
         Match(Tag::ID);
+        if (Match('[')) {
+            Expression *index1 = Bool();
+            if (Match(':')) {
+                // Acesso a matriz bidimensional
+                Expression *index2 = Bool();
+                expr = new Access(etype, new Token{Tag::ID, "[:]"}, expr, index1, index2);
+            } else {
+                // Acesso a vetor unidimensional
+                expr = new Access(etype, new Token{Tag::ID, "[]"}, expr, index1);
+            }
 
-        // acesso a elemento de um arranjo
-        if (Match('['))
-        {
-            Expression * index = Bool();
-            expr = new Access(etype, new Token{Tag::ID, "[]"}, expr, index);
-
-            if (!Match(']'))
-            {
+            if (!Match(']')) {
                 stringstream ss;
                 ss << "esperado ] no lugar de  \'" << lookahead->lexeme << "\'";
                 throw SyntaxError{scanner->Lineno(), ss.str()};
@@ -653,7 +824,8 @@ Expression *Parser::Factor()
 }
 
 bool Parser::Match(int tag)
-{
+{   
+    
     if (tag == lookahead->tag)
     {
         lookahead = scanner->Scan();

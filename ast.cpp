@@ -55,7 +55,7 @@ Statement::Statement(int type) :
 
 void Statement::Gen() 
 {
-
+    
 }
 
 // ----------
@@ -147,16 +147,30 @@ Identifier::Identifier(int etype, Token *t) :
 Access::Access(int etype, Token *t, Expression *i, Expression *e) : 
     Expression(NodeType::ACCESS, etype, t), 
     id(i), 
-    expr(e) 
+    indexX(e) 
 {
 
 }
 
-string Access::ToString()
+Access::Access(int etype, Token *t, Expression *i, Expression *e1, Expression *e2)
+    : Expression(NodeType::ACCESS, etype, t), id(i), indexX(e1), indexY(e2)
 {
-    stringstream ss;
-    ss << id->ToString() << "[" << expr->ToString() << "]";
-    return ss.str();
+
+}
+
+
+// string Access::ToString()
+// {
+//     stringstream ss;
+//     ss << id->ToString() << "[" << expr->ToString() << "]";
+//     return ss.str();
+// }
+
+string Access::ToString() {
+    if (indexY)
+        return id->ToString() + "[" + indexX->ToString() + ":"+ indexY->ToString() + "]";
+    else
+        return id->ToString() + "[" + indexX->ToString() + "]";
 }
 
 // -------
@@ -286,7 +300,7 @@ Assign::Assign(Expression *i, Expression *e) :
 }
 
 void Assign::Gen()
-{
+{ 
     Expression * left = Lvalue(id);
     Expression * right = Rvalue(expr);
     cout << '\t' << left->ToString() << " = " << right->ToString() << endl;
@@ -364,3 +378,88 @@ void DoWhile::Gen()
     Expression * n = Rvalue(expr);
     cout << "\tifTrue " << n->ToString() << " goto L" << before << endl;
 }
+
+// --------
+// FOR
+// --------
+
+For::For(Assign *init, Expression *condition, Assign *increment, Statement *s) : 
+    Statement(NodeType::FOR_STMT),
+    for_init(init),
+    for_condition(condition),
+    for_increment(increment),
+    stmt(s)
+{
+    before = NewLabel();
+    after = NewLabel();
+}
+
+void For::Gen(){
+
+    for_init->Gen();
+
+    cout << 'L' << before << ':' << endl;
+    Expression * n = Rvalue(for_condition);
+    cout << "\tifFalse " << n->ToString() << " goto L" << after << endl;
+    stmt->Gen();
+    Expression *inc_reg = Rvalue(for_increment->expr);  //Registrador que guarda o incremento
+    cout << "\t" << for_increment->id->ToString() << " = " <<  inc_reg->ToString() << endl;
+    cout << "\tgoto L" << before << endl;
+    cout << 'L' << after << ':' << endl;     
+}
+
+// --------
+// Func
+// --------
+Func::Func(std::string funcName, int returnType, std::vector<string> paramTypes, std::vector<string> paramNames, Statement *body, string ret) : 
+    Statement(NodeType::FUNC_STMT),
+    stmt(body),
+    funcName(funcName), 
+    returnType(returnType), 
+    paramTypes(paramTypes), 
+    paramNames(paramNames), 
+    body(body), 
+    ret(ret)
+{
+    after = NewLabel();
+}
+void Func::Gen(){
+    std::cout << funcName << ":" << endl;
+        // Declaração dos parâmetros
+    for (int i = 0; i < paramNames.size(); ++i) {
+        cout << "\tparam " << paramNames[i] << " : " << paramTypes[i] << endl;
+    }
+    cout << "\n" << endl;
+
+    // Corpo da função
+    stmt->Gen();
+
+    // Final da função
+    if (!ret.empty()) {
+        std::cout << "\n\treturn " << ret << endl;
+    }
+
+    std::cout << "\tendfunc" << endl;
+}
+FuncCall::FuncCall(std::string funcName,  std::vector<Expression*> args):
+    funcName(funcName), 
+    args(args)
+{
+    after = NewLabel();
+}
+void FuncCall::Gen(){
+   for (size_t i = 0; i < paramNames.size(); ++i) {
+        cout << "\tparam " << paramNames[i] << endl; // Empilha os argumentos
+    }
+
+    // Cria um temporário para o valor retornado
+    Temp *temp = new Temp(returnType);
+
+    // Gera a instrução de chamada da função
+    cout << "\t" << temp->ToString() << " = call " << funcName << ", " << paramNames.size() << endl;
+
+    if (stmt) { 
+        stmt->Gen(); 
+        cout << "\t" << stmt->ToString() << " = " << temp->ToString() << endl;
+    }
+};

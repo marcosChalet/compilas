@@ -12,6 +12,8 @@ struct Symbol
 {
 	string var;
 	string type;
+	int valX;
+	int valY;
 };
 
 
