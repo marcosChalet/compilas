@@ -1,5 +1,5 @@
 🔢 num
-num = 10
+//num = 10
 🧐 falso 🧐 verdadeiro
 🌊 flutuante
 
