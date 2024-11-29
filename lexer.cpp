@@ -9,18 +9,18 @@ extern std::ifstream fin;
 Lexer::Lexer()
 {
 	// insere palavras-reservadas na tabela
-	token_table["main"]   = Token{ Tag::MAIN,     "main" };
-	token_table["int"]    = Token{ Tag::TYPE,      "int" };
-	token_table["float"]  = Token{ Tag::TYPE,    "float" };
-	token_table["bool"]   = Token{ Tag::TYPE,     "bool" };
-	token_table["true"]   = Token{ Tag::TRUE,     "true" };
-	token_table["false"]  = Token{ Tag::FALSE,   "false" };
-	token_table["if"]     = Token{ Tag::IF,         "if" };
-	token_table["while"]  = Token{ Tag::WHILE,   "while" };
-	token_table["do"]     = Token{ Tag::DO,         "do" };
-	token_table["for"]	  = Token{ Tag::FOR,       "for" };
-	token_table["func"]	  = Token{ Tag::FUNC,     "func" };
-	token_table["return"] = Token{ Tag::RETURN, "return" };
+	token_table["👑"]   = Token{ Tag::MAIN,     "main" };
+	token_table["🔢"]    = Token{ Tag::TYPE,      "int" };
+	token_table["🌊"]  = Token{ Tag::TYPE,    "float" };
+	token_table["🧐"]   = Token{ Tag::TYPE,     "bool" };
+	token_table["👍"]   = Token{ Tag::TRUE,     "true" };
+	token_table["👎"]  = Token{ Tag::FALSE,   "false" };
+	token_table["🤔"]     = Token{ Tag::IF,         "if" };
+	token_table["🔁"]  = Token{ Tag::WHILE,   "while" };
+	token_table["👇"]     = Token{ Tag::DO,         "do" };
+	token_table["🧬"]	  = Token{ Tag::FOR,       "for" };
+	token_table["👻"]	  = Token{ Tag::FUNC,     "func" };
+	token_table["🦋"] = Token{ Tag::RETURN, "return" };
 
 	
 	// inicia leitura da entrada
@@ -263,8 +263,40 @@ Token * Lexer::Scan()
 		break;
 	}
 
+	if ( utf8CharLength(peek) == 4 ){
+		stringstream emojiStream;
+		//std::cout << "🤓 aquiiiiii" << std::endl;
+		
+		for (int i = 0; i < 4; i++){
+			emojiStream << peek;
+			peek = fin.get();
+		}
+
+		string emoji = emojiStream.str();
+		emojiStream.clear();
+		auto pos = token_table.find(emoji);
+
+		if (pos != token_table.end())
+		{
+			//std::cout << "Emoji reservado '" << emoji << "' encontrado" << std::endl;
+			token = pos->second;
+			return &token;
+		}
+
+		return NULL;
+	}
+
 	// retorna caracteres não alphanuméricos isolados: (, ), +, -, etc.
 	token = Token{peek};
 	peek = ' ';
 	return &token;
+}
+
+int Lexer::utf8CharLength(unsigned char c) {
+
+    if ((c & 0x80) == 0) return 1;         // ASCII (1 byte)
+    else if ((c & 0xE0) == 0xC0) return 2; 
+    else if ((c & 0xF0) == 0xE0) return 3; 
+    else if ((c & 0xF8) == 0xF0) return 4; // 4-byte UTF-8 (emojis, etc.)
+    return 1; 
 }

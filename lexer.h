@@ -33,6 +33,7 @@ private:
 
 	// tabela para identificadores e palavras-chave
 	unordered_map<string, Token> token_table;
+	int utf8CharLength(unsigned char);
 
 public:
 	Lexer();			// construtor
