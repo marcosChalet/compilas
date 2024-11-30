@@ -1,29 +1,21 @@
-int i int j int k float vet[10] bool flag
-int mat[10:20]
+🔢 num
+//num = 10
+🧐 falso 🧐 verdadeiro
+🌊 flutuante
 
-i = 0
-j = 9
-k = 1
-flag = false
-mat[0:0] = 21
+flutuante = 0.9
+num = 7
+falso = 👍
+verdadeiro = 👎
 
-if (mat[0:0] > 10) {
-    mat[0:0] = 5
+🤔 (num < 100)
+    num = 100
+
+👻 add() : 🔢{
+    🔢a 🔢b 🔢c
+    a = 14
+    b = 13
+    c = a + b
+
+    🦋 c
 }
-
-do
-{
-    while (i < k)
-        i = i + 1
-
-    // testa operadores logicos
-    while (j > k && j <= 5 || true && !flag)
-        j = j - 1
-
-    if (vet[i] < vet[j])
-    {
-        vet[i] = vet[i - 1] * 2.0
-        vet[j] = vet[j + 1] / 2.0
-    }
-} 
-while (i < j)
