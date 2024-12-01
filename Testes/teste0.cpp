@@ -19,3 +19,5 @@ verdadeiro = 👎
 
     🦋 c
 }
+
+num = add()

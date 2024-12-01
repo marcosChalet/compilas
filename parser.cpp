@@ -199,7 +199,6 @@ Statement *Parser::Stmt()
         callReturn = Call();
 
         if(callReturn.isFunction){
-            cout << callReturn.arguments.size()<<endl;
             stmt = new FuncCall(callReturn.name, callReturn.arguments, left->token->lexeme);
         }else{
             Expression *right = Bool();
