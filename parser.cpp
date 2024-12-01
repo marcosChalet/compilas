@@ -127,7 +127,6 @@ void Parser::Decls()
             }
         }
 
-        // cria símbolo
         Symbol s{name, type, valX, valY};
 
         // insere variável na tabela de símbolos
@@ -364,24 +363,7 @@ Statement *Parser::Stmt()
         {
             do
             {
-                // captura nome do tipo
-                string type{lookahead->lexeme};
-                paramTypes.push_back(lookahead->lexeme);
-                Match(Tag::TYPE);
-
-                // captura nome do identificador
-                string name{lookahead->lexeme};
-                paramNames.push_back(lookahead->lexeme);
-                Match(Tag::ID);
-
-                Symbol s{name, type};
-
-                if (!symtable->Insert(name, s))
-                {
-                    stringstream ss;
-                    ss << "variável \"" << name << "\" já definida";
-                    throw SyntaxError(scanner->Lineno(), ss.str());
-                }
+                Decls();
             } while (Match(',')); // Permitir lista separada por vírgulas
         }
 

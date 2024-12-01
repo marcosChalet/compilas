@@ -265,7 +265,6 @@ Token * Lexer::Scan()
 
 	if ( utf8CharLength(peek) == 4 ){
 		stringstream emojiStream;
-		//std::cout << "🤓 aquiiiiii" << std::endl;
 		
 		for (int i = 0; i < 4; i++){
 			emojiStream << peek;

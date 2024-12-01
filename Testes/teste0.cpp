@@ -1,3 +1,4 @@
+🔢 numDois
 🔢 num
 //num = 10
 🧐 falso 🧐 verdadeiro
@@ -11,7 +12,7 @@ verdadeiro = 👎
 🤔 (num < 100)
     num = 100
 
-👻 add() : 🔢{
+👻 add(🔢 x) : 🔢{
     🔢a 🔢b 🔢c
     a = 14
     b = 13
@@ -20,4 +21,5 @@ verdadeiro = 👎
     🦋 c
 }
 
-num = add()
+numDois = 5
+num = add(numDois)
