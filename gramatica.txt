@@ -21,6 +21,8 @@ stmt -> if_stmt
       | do_while_stmt
       | func_decl
       | expr
+      | func_call
+
 
 if_stmt -> "if" "(" expr ")" block else_block
 else_block -> "else" block | ϵ
@@ -30,6 +32,8 @@ for_stmt -> "for" "(" id "=" expr ";" expr ";" id = expr ")" block
 while_stmt -> "while" "(" expr ")" block
 
 do_while_stmt -> "do" block "while" "(" expr ")"
+
+func_call -> id "(" params ")"
 
 func_decl -> "func" id "(" params ")"":" type block
 
