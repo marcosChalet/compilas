@@ -191,20 +191,99 @@ struct Func : public Statement
     Func(std::string funcName, int returnType, std::vector<string> paramTypes, std::vector<string> paramNames, Statement *body, string ret);
     void Gen();
 };
-struct FuncCall : public Statement
-{
-    int after;
-    string funcName;
-    int returnType;
-    string ret;
+struct FuncCall : public Statement {
+    string function;               // Nome da função (identificador)
+    std::vector<string> args;      // Lista de argumentos
+    std::string functionName;
+    bool isFunction = false;
+    std::string ret;
 
-    std::vector<string> paramTypes;
-    std::vector<string> paramNames;
-    std::vector<string> value;
-    std::vector<Expression*> args;
-    Statement *stmt;
-    Expression *expr;
-    FuncCall(std::string funcName,  std::vector<Expression*> args);
+
+    FuncCall(string function, std::vector<string> arguments, std::string ret);
+
     void Gen();
+};
+struct CallParam {
+    std::vector<string> arguments; // Argumentos da função
+    bool isFunction;                    // Indica se é uma função
+    std::string name;                   // Nome da variável ou função
+    Expression* left;                   // Lado esquerdo da expressão (opcional)
+
+    // Construtor com inicializações
+    CallParam(std::vector<string> args = {}, 
+              bool isFunc = false, 
+              std::string funcName = "test", 
+              Expression* lhs = nullptr)
+        : arguments(std::move(args)), isFunction(isFunc), name(std::move(funcName)), left(lhs) {}
+
+    // Métodos 'set' para cada variável
+
+    void setIsFunction(bool newIsFunction) {
+        isFunction = newIsFunction;
+    }
+
+    void setName(const std::string& newName) {
+        name = newName;
+    }
+
+    void setLeft(Expression* newLeft) {
+        left = newLeft;
+    }
+    void setArgs(const std::vector<std::string>& newArgs) {
+        // Liberar memória dos argumentos antigos
+        arguments.clear();
+
+        // Copiar os novos argumentos
+        for (const auto& arg : newArgs) {
+            arguments.push_back(arg); // Copiar o conteúdo de cada string
+        }
+    }
+
+    // Construtor de cópia
+    CallParam(const CallParam& other)
+        : arguments(other.arguments), 
+          isFunction(other.isFunction), 
+          name(other.name),
+          left(other.left ? new Expression(*other.left) : nullptr) {}
+
+    // Operador de atribuição
+    CallParam& operator=(const CallParam& other) {
+        if (this == &other) return *this; // Evitar auto-atribuição
+
+        arguments = other.arguments;
+        isFunction = other.isFunction;
+        name = other.name;
+
+        // Gerenciar o ponteiro
+        delete left;
+        left = other.left ? new Expression(*other.left) : nullptr;
+
+        return *this;
+    }
+
+    // Construtor de movimentação
+    CallParam(CallParam&& other) noexcept
+        : arguments(std::move(other.arguments)),
+          isFunction(other.isFunction),
+          name(std::move(other.name)),
+          left(other.left) {
+        other.left = nullptr; // Garantir que o recurso original não será destruído
+    }
+
+    // Operador de movimentação
+    CallParam& operator=(CallParam&& other) noexcept {
+        if (this == &other) return *this;
+
+        arguments = std::move(other.arguments);
+        isFunction = other.isFunction;
+        name = std::move(other.name);
+        
+        // Gerenciar o ponteiro
+        delete left;
+        left = other.left;
+        other.left = nullptr;
+
+        return *this;
+    }
 };
 #endif

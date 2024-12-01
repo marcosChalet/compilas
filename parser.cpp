@@ -193,9 +193,18 @@ Statement *Parser::Stmt()
             ss << "esperado = no lugar de  \'" << lookahead->lexeme << "\'";
             throw SyntaxError{scanner->Lineno(), ss.str()};
         }
+        Symbol *s = symtable->Find(lookahead->lexeme);
+        CallParam callReturn;
+        //cout<< s->paramNames.empty()<< "callreturn" << endl;
+        callReturn = Call();
 
-        Expression *right = Bool();
-        stmt = new Assign(left, right);
+        if(callReturn.isFunction){
+            cout << callReturn.arguments.size()<<endl;
+            stmt = new FuncCall(callReturn.name, callReturn.arguments, left->token->lexeme);
+        }else{
+            Expression *right = Bool();
+            stmt = new Assign(left, right);
+        }
         return stmt;
     }
     // stmt -> if (bool) stmt
@@ -333,18 +342,17 @@ Statement *Parser::Stmt()
     {
         Match(Tag::FUNC);
 
-        // Capturar o nome da função
         if (lookahead->tag != Tag::ID)
         {
             stringstream ss;
             ss << "esperado um identificador para o nome da função, mas encontrado: \'" << lookahead->lexeme << "\'";
             throw SyntaxError{scanner->Lineno(), ss.str()};
         }
+
         std::string funcName = lookahead->lexeme;
         string name{lookahead->lexeme};
         Match(Tag::ID);
 
-        // Capturar os parâmetros entre parênteses ()
         if (!Match('('))
         {
             stringstream ss;
@@ -367,13 +375,10 @@ Statement *Parser::Stmt()
                 paramNames.push_back(lookahead->lexeme);
                 Match(Tag::ID);
 
-                // cria símbolo
                 Symbol s{name, type};
 
-                // insere variável na tabela de símbolos
                 if (!symtable->Insert(name, s))
                 {
-                    // a inserção falha quando a variável já está na tabela
                     stringstream ss;
                     ss << "variável \"" << name << "\" já definida";
                     throw SyntaxError(scanner->Lineno(), ss.str());
@@ -403,8 +408,20 @@ Statement *Parser::Stmt()
         string type{lookahead->lexeme};
         Match(Tag::TYPE);
 
-                // cria símbolo
-        Symbol s{name, type};
+        Statement *body;
+        // Corpo da função (espera um bloco de instruções)
+        string ret;
+        body = Block(ret);
+
+        Symbol s;
+        s.isFunction = true;
+        s.var = name;
+        s.type = type;
+        s.paramTypes = paramTypes;
+        s.paramNames = paramNames;
+        s.ret = ret;
+        s.body = body;
+
         // insere variável na tabela de símbolos
         if (!symtable->Insert(name, s))
         {
@@ -414,10 +431,6 @@ Statement *Parser::Stmt()
             throw SyntaxError(scanner->Lineno(), ss.str());
         }
 
-        Statement *body;
-        // Corpo da função (espera um bloco de instruções)
-        string ret;
-        body = Block(ret);
         stmt = new Func(funcName, returnType, paramTypes, paramNames, body, ret);
         // Criar o nó da função
         return stmt;
@@ -438,6 +451,55 @@ Statement *Parser::Stmt()
     }
 }
 
+CallParam Parser::Call(){
+    CallParam left;
+
+    Expression *expr = nullptr;
+    string name;
+    std::vector<string> args;
+    bool isFunction = false;
+    Symbol *s = symtable->Find(lookahead->lexeme);
+    if (!s)
+    {
+        return left;
+    }
+    if (s->isFunction) { // Identificar chamada de função
+        Match(Tag::ID); // Nome da função
+
+        //Identifier *funcName = new Identifier(ExprType::VOID, lookahead);
+
+        Match('('); // Abre parêntese
+        isFunction = true;
+        if (lookahead->tag != ')') { // Lista de argumentos não vazia
+            do {
+                // Verifica se o token é um identificador ou tipo válido
+                if (lookahead->tag == Tag::ID || lookahead->tag == Tag::TYPE) {
+                    args.push_back(lookahead->lexeme); // Adiciona o argumento à lista
+
+                    Match(lookahead->tag); // Avança para o próximo token
+                    
+                } else {
+                    // Caso o token não seja válido, lança um erro de sintaxe
+                    throw SyntaxError(scanner->Lineno(), "Argumento inválido na chamada de função.");
+                }
+
+                // Se houver uma vírgula, consome-a e continua para o próximo argumento
+            } while (lookahead->tag == ',' && Match(','));
+        }
+        Match(')'); // Fecha parêntese
+        // Criar a chamada de função na AST
+        name = s->var;
+
+
+    }else{
+        left.setIsFunction(false);
+    }
+    left.setName(name);
+    left.setLeft(expr);
+    left.setArgs(args);
+    left.setIsFunction(isFunction);
+    return left;
+}
 Expression *Parser::Local()
 {
     // local -> local[bool]

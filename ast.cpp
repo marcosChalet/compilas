@@ -426,40 +426,25 @@ Func::Func(std::string funcName, int returnType, std::vector<string> paramTypes,
 void Func::Gen(){
     std::cout << funcName << ":" << endl;
         // Declaração dos parâmetros
-    for (int i = 0; i < paramNames.size(); ++i) {
-        cout << "\tparam " << paramNames[i] << " : " << paramTypes[i] << endl;
-    }
-    cout << "\n" << endl;
-
     // Corpo da função
     stmt->Gen();
-
-    // Final da função
-    if (!ret.empty()) {
-        std::cout << "\n\treturn " << ret << endl;
-    }
-
-    std::cout << "\tendfunc" << endl;
+    cout << "\t" << "return" << " " << ret << endl;
+    cout << "\t" << endl;
 }
-FuncCall::FuncCall(std::string funcName,  std::vector<Expression*> args):
-    funcName(funcName), 
-    args(args)
+//, std::vector<string> arguments
+FuncCall::FuncCall(string function, std::vector<string> arguments, std::string ret)
+    : Statement(NodeType::FUNC_STMT),
+      function(function),
+      args(arguments),
+      ret(ret)
+    //args(std::move(arguments))
 {
-    after = NewLabel();
 }
+
 void FuncCall::Gen(){
-   for (size_t i = 0; i < paramNames.size(); ++i) {
-        cout << "\tparam " << paramNames[i] << endl; // Empilha os argumentos
+        // Gera código intermediário para a chamada da função
+    for (size_t i = 0; i < args.size(); ++i) {
+        cout << "\t" << "param " << args[i] << std::endl;
     }
-
-    // Cria um temporário para o valor retornado
-    Temp *temp = new Temp(returnType);
-
-    // Gera a instrução de chamada da função
-    cout << "\t" << temp->ToString() << " = call " << funcName << ", " << paramNames.size() << endl;
-
-    if (stmt) { 
-        stmt->Gen(); 
-        cout << "\t" << stmt->ToString() << " = " << temp->ToString() << endl;
-    }
-};
+    cout << "\t"<< ret << " = call " << function<< std::endl;
+}
