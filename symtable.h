@@ -3,17 +3,26 @@
 
 #include <unordered_map>
 #include <string>
+#include <vector>
+#include "ast.h"
 using std::unordered_map;
 using std::string;
 
 
 // modelo para símbolos
-struct Symbol
-{
-	string var;
-	string type;
-	int valX;
-	int valY;
+struct Symbol {
+    std::string var;                        
+    std::string type;                       
+    int valX;
+    int valY;
+    
+	bool isFunction = false;
+    std::vector<string> paramTypes;
+	std::vector<string> paramNames;
+	Statement *body;
+	std::vector<Expression*> arguments;
+    bool funcCall = false;
+	std::string ret;
 };
 
 

@@ -16,6 +16,7 @@ private:
 	void Decl();
 	Statement * Stmts();
 	Statement * Stmt();
+	CallParam Call();
 	Expression * Local();
 	Expression * Bool();
 	Expression * Join();
